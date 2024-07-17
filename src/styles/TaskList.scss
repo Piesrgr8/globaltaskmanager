@@ -1,0 +1,122 @@
+.tasklist {
+    h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    li {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        padding: 15px 20px;
+        background-color: #fff8e1;
+        border: 1px solid #f1c40f;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition:
+            transform 0.2s,
+            box-shadow 0.2s;
+
+        &:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .checkbox {
+            position: relative;
+            margin-right: 15px;
+            width: 20px;
+            height: 20px;
+            input[type='checkbox'] {
+                opacity: 0;
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                cursor: pointer;
+            }
+
+            span {
+                display: block;
+                width: 100%;
+                height: 100%;
+                background: #fff;
+                border: 2px solid #ccc;
+                border-radius: 5px;
+                transition:
+                    background-color 0.2s,
+                    border-color 0.2s;
+            }
+
+            input[type='checkbox']:checked + span {
+                background: #27ae60;
+                border-color: #27ae60;
+            }
+
+            input[type='checkbox']:checked + span::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 8px;
+                height: 14px;
+                border: solid white;
+                border-width: 0 2px 2px 0;
+                transform: translate(-50%, -50%) rotate(45deg);
+            }
+        }
+
+        .task-text {
+            flex-grow: 1;
+            font-size: 18px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+
+            &:hover {
+                background-color: #c0392b;
+            }
+        }
+    }
+
+    button.add-task {
+        display: block;
+        margin: 20px auto 0;
+        font-size: 24px;
+        width: 50px;
+        height: 50px;
+        background-color: #27ae60;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        padding: 0;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+        &:hover {
+            background-color: #219150;
+        }
+    }
+}
+
+.error-message {
+    color: red;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
