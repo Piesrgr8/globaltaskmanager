@@ -1,6 +1,9 @@
 # Global Task Manager
+[Access the finished product here!](http://globaltaskmanager.s3-website-us-east-1.amazonaws.com/index.html)
 ## Beginning Development
 To follow the project’s requirements, I thought the best project for this would be to make a task manager or to-do list, since it requires the fetching of tasks and the function to delete or add tasks. I figured the easiest way to begin was to start working on the Django project using the REST framework, since the frontend will be pulling from the Django project itself. First, we will focus on the local part of setting up Django.
+
+But first, what I am working on is a custom build PC with Linux Manjaro installed and editing code using VSCode or VIM. VIM isn't ideal, but it was good to make any small changes to code. To help build with VSCode, there is one big plugin that could change your life, called `React Snippets`. It allows for shortcuts to create a react component with ease.
 
 ### Backend
 To begin this process, we need to install [python](https://www.python.org/), which can be done by going to their website and getting the installer. But for me, since I am on Linux Manjaro, it already comes pre-installed.
@@ -101,7 +104,7 @@ To start, we need to have a seperate folder for our frontend, and this can be ac
 npx create-react-app taskmanager --template typescript
 ```
 After that, we should change our directory to `taskmanager` and install a couple of useful packages.
-* `Prettier` is a linter that can be ran using `npx prettier -w <project>`.
+* `Prettier` is a linter that can be ran using `npx prettier -w <project-directory>`.
 * `Axios` will replace Ajax requests with something a little more simpler. It will take on the responsibility of post, delete, and put requests.
 * `Sass` is a language that is written in css, but multiple ids and classes can be nested.
 
@@ -155,7 +158,7 @@ python3 -m venv venv && source venv/bin/activate
 
 Remember back when we did the local django server and had to install these pip packages?:
 ```
-pip install django djangorestframework gunicorn
+pip install django djangorestframework gunicorn django-cors-headers
 ```
 I added a couple for later
 
@@ -301,11 +304,11 @@ If we head back to our browser and in our EC2, navigate to the security tab and 
 ![Screenshot 2024-07-19 105403](https://github.com/user-attachments/assets/e3a7da64-da84-4d1a-9209-21d40a75696f)
 The bottom refers to the SSH from the terminal if you care about security.
 
-Test the server to see if it works at http://<public-ipv4>
+Test the server to see if it works at `http://<public-ipv4>`
 
 ### Frontend
 We simply go to our react project and run `npm run build`. Then on S3, we'll create a new S3 with a recognizable name, and uncheck `block public access`.
-We can now upload everythin inside the build folder in our project, go to the properties tab and enable static hosting, and then go to the permissions tab to add this policy:
+We can now upload everything inside the build folder in our project, go to the properties tab and enable static hosting, and then go to the permissions tab to add this policy:
 ```
 {
     "Version": "2012-10-17",
@@ -321,3 +324,26 @@ We can now upload everythin inside the build folder in our project, go to the pr
 ```
 
 And that's it! The frontend is live!
+
+## Post Actions
+Afterwards, its time to make sure everything works by accessing the static url that S3 gives you once you have enabled static hosting. If there proceeds to be errors, make sure you've entered everything correctly for those files we made for the backend and make sure you have given proper access to the ipv4.
+
+An extra step, if you'd like to, is setup an elastic IP, where the ip doesn't change even if the server shuts down unexpectedly. Its simple as going to EC2 and navigating to elastic IPs, then create a new one with the EC2 instance selected. Then you'll be able to access the new IP on your browser and react app. Be sure to also logout of the terminal SSH so that you can re-enter the ip again, because that will change too.
+
+## DEMO
+When accessing the site, you will be greeted to a small boxed screen that resembles a list.
+<br><img width="433" alt="Capture" src="https://github.com/user-attachments/assets/3666877d-e8a5-4dd1-88c5-dd45dee32992"><br>
+
+When you click the plus sign at the bottom, you will be greeted to a modal.
+<br><img width="422" alt="Capture1" src="https://github.com/user-attachments/assets/0f0be2d6-eed8-479f-b7d8-3f3d5136d238"><br>
+
+Once you've clicked save, you will see your new task on the board!
+Afterwards, you can click on the checkbox to complete a task or the delete button to remove a task.
+If you ever felt like you need to modify a task, clicking on the task itself with prompt you with another modal to edit the task or delete it.
+<br><img width="402" alt="Capture3" src="https://github.com/user-attachments/assets/a1720cbd-5a00-4f80-a20e-f7330d6cff75"><br>
+
+Pretty Simple!
+
+Also, an extra quirk of this application is that its already been modified to be used on mobile as well!
+And, it has extra error catching so that if the server were to be down, you will be notified of it.
+<br><img width="441" alt="Capture4" src="https://github.com/user-attachments/assets/01420009-5820-411d-8846-3ac4467ab148"><br>
