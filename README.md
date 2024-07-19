@@ -125,4 +125,72 @@ The two services I will be focusing on are EC2 and S3. It's super easy to setup 
 4. Create a new key pair and save it as a .pem. PUT IT IN A SAFE PLACE.
 5. Network settings are set to default as well, where it will create a new security group.
 
-Now we have it created and running, we will now need to connect to it and yet again install the same stuff that we did on our local computer.
+Now we have it created and running, we will now need to connect to it and yet again install the same stuff that we did on our local computer. To do this, I will use the terminal on my computer.
+
+To do this, enter this command:
+```
+ssh -i <name-of-key>.pem ubuntu@<ec2-public-address>
+```
+
+Now, let's use this command to install our essentials for django to work:
+```
+sudo apt update && sudo apt install python3-pip python3-venv python3-dev libpq-dev postgresql postgresql-contrib nginx curl
+```
+
+Just so we are organized, lets create a directory for our project:
+```
+mkdir <project-name> && cd <project-name>
+```
+
+We will create our virtual environment within this project folder:
+```
+python3 -m venv venv && source venv/bin/activate
+```
+
+Remember back when we did the local django server and had to install these pip packages?:
+```
+pip install django djangorestframework
+```
+
+Typically, you'd want your project version controlled so that it can be accessed securly for this process, but I didn't do this because it was simple enough to transfer over using FTP and have the server made there using VIM.
+
+If it is version controlled, clone the repo using `git clone` and then work from there. But, for this, open your favorite FTP client. For me, it's `FileZilla`.
+
+1. Open FileZilla.
+2. Create a new site.
+3. Fill in details:
+* Username: ubuntu
+* Host: Public IPV4
+* Method: SFTP
+4. Select .pem file as password.
+
+Now navigate to the project folder and drag & drop the entire django project folder into it. Once that's done, you can safely disconnect.
+
+Let's convert our database to postgresql before we continue to migrate.
+
+Then, we will add all of the necessary data so that we have a user with total control (RUN ONE COMMAND AT A TIME):
+```
+CREATE DATABASE taskmanager;
+CREATE USER your_db_user WITH PASSWORD 'your_password';
+ALTER ROLE your_db_user SET client_encoding TO 'utf8';
+ALTER ROLE your_db_user SET default_transaction_isolation TO 'read committed';
+ALTER ROLE your_db_user SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE taskmanager TO your_db_user;
+\q
+```
+
+Within the settings.py, it will have settings for databases, but missing a couple fields. Let's add them!
+```
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'taskmanager',
+        'USER': 'ubuntu',
+        'PASSWORD': 'your_password',
+        'HOST': 'localhost',
+        'PORT': '',
+    }
+}
+```
+
+It should be safe now to execute `python manage.py migrate` or if haven't yet, `python manage.py makemigrations`
