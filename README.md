@@ -115,3 +115,14 @@ And that is my setup! Since we are in the repository for it, you can see how its
 * `TaskForm` was part of the modal, but ended up getting remade inside the modal component itself.
 
 ### AWS
+[Click here for pickup line](https://youtu.be/jk0gBZtTYUA?t=142)
+
+The two services I will be focusing on are EC2 and S3. It's super easy to setup S3, so let's focus on something we'll definitly need to work first.
+
+1. Navigate to EC2 and launch a new instance.
+2. Name the EC2 whatever you'd like. Preferably something related to the project (we'll call it 'django-tasks').
+3. Select `Ubuntu` and leave everything to its default setting.
+4. Create a new key pair and save it as a .pem. PUT IT IN A SAFE PLACE.
+5. Network settings are set to default as well, where it will create a new security group.
+
+Now we have it created and running, we will now need to connect to it and yet again install the same stuff that we did on our local computer.
