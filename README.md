@@ -114,7 +114,8 @@ And that is my setup! Since we are in the repository for it, you can see how its
 * `TaskDetailModal` is a modal that displays when clicking on a task to edit or adding a task.
 * `TaskForm` was part of the modal, but ended up getting remade inside the modal component itself.
 
-### AWS
+## AWS
+### Backend
 [Click here for pickup line](https://youtu.be/jk0gBZtTYUA?t=142)
 
 The two services I will be focusing on are EC2 and S3. It's super easy to setup S3, so let's focus on something we'll definitly need to work first.
@@ -130,6 +131,11 @@ Now we have it created and running, we will now need to connect to it and yet ag
 To do this, enter this command:
 ```
 ssh -i <name-of-key>.pem ubuntu@<ec2-public-address>
+```
+
+Start off using this command to allow OpenSSH on the server:
+```
+sudo ufw allow OpenSSH && sudo ufw enable
 ```
 
 Now, let's use this command to install our essentials for django to work:
@@ -149,8 +155,9 @@ python3 -m venv venv && source venv/bin/activate
 
 Remember back when we did the local django server and had to install these pip packages?:
 ```
-pip install django djangorestframework
+pip install django djangorestframework gunicorn
 ```
+I added a couple for later
 
 Typically, you'd want your project version controlled so that it can be accessed securly for this process, but I didn't do this because it was simple enough to transfer over using FTP and have the server made there using VIM.
 
@@ -193,4 +200,124 @@ DATABASES = {
 }
 ```
 
-It should be safe now to execute `python manage.py migrate` or if haven't yet, `python manage.py makemigrations`
+While we are in this file, lets define where our static files are going to be. This will be useful for our setup later.
+Below the line `STATIC_URL`, lets add this section here:
+```
+import os
+STATIC_ROOT = os.path.join(BASE_URL, 'static/')
+```
+
+And of course, run this command to see if it worked:
+```
+python manage.py collectstatic
+```
+
+It should also be safe now to execute `python manage.py migrate` or if haven't yet, `python manage.py makemigrations`
+
+Now, we could just run `python manage.py runserver` and call it a day, but I really wanted to use nginx and gunicorn for this setup.
+So, what we do is run `deactivate` in the command line and start modifying files.
+
+Let's use `sudo nano` to edit a file `/etc/systemd/system/gunicorn.socket`
+```
+[Unit]
+Description=gunicorn socket
+
+[Socket]
+ListenStream=/run/gunicorn.sock
+
+[Install]
+WantedBy=sockets.target
+```
+
+Then, lets `sudo nano` another file `/etc/systemd/system/gunicorn.service`
+```
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/<foldername>/<project folder>
+ExecStart=/home/ubuntu/<foldername>/venv/bin/gunicorn \
+    --access-logfile - \
+    --workers 3 \
+    --bind unix:/run/gunicorn.sock \
+    --<appname>.wsgi:application
+
+[Install]
+WantedBy=multi.user.target
+```
+
+Afterwards, we need to activate this service by using these commands:
+```
+sudo systemctl start gunicorn.socket && sudo systemctl enable gunicorn.socket
+```
+
+We should also double check that the file exists by running `file /run/gunicorn.socket`
+And also, check to see if the server is running with no error:
+```
+sudo systemctl status gunicorn && curl --unix-socket /run/gunicorn.sock localhost
+```
+
+It should return something like 'Not Found' or 'Resource not found', because if not, we need to run a command to see whats wrong:
+```
+sudo systemctl status gunicorn
+```
+
+Now we should be good and the server is running!
+To eliminate the port number, nginx comes in to help!
+
+Yet again, we'll need to `sudo nano` a file at `/etc/nginx/sites-available/djangotasks`
+```
+server {
+    listen 80;
+    server_name <public_ipv4>;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location /static/ {
+        root /home/ubuntu/<foldername>/<project-name>;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/run/gunicorn.sock;
+    }
+}
+```
+
+Then we'll run this line to link two folders together:
+```
+sudo ln -s /etc/nginx/sites-available/djangotasks /etc/nginx/sites-enabled
+```
+
+To check and see if our syntax is correct, we run `sudo nginx -t` and afterwards run this:
+```
+sudo systemctl restart nginx && sudo ufw allow 'Nginx Full'
+```
+
+If we head back to our browser and in our EC2, navigate to the security tab and click on our security group. Make sure our rules look like this:
+![Screenshot 2024-07-19 105403](https://github.com/user-attachments/assets/e3a7da64-da84-4d1a-9209-21d40a75696f)
+The bottom refers to the SSH from the terminal if you care about security.
+
+Test the server to see if it works at http://<public-ipv4>
+
+### Frontend
+We simply go to our react project and run `npm run build`. Then on S3, we'll create a new S3 with a recognizable name, and uncheck `block public access`.
+We can now upload everythin inside the build folder in our project, go to the properties tab and enable static hosting, and then go to the permissions tab to add this policy:
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::<S3-bucket-name>/*"
+        }
+    ]
+}
+```
+
+And that's it! The frontend is live!
